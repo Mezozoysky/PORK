@@ -14,6 +14,8 @@ set(PORK_BUILD_UT_DEFAULT TRUE)
 
 option(PORK_BUILD_SHARED "Build shared libraries" ${PORK_BUILD_SHARED_DEFAULT})
 option(PORK_BUILD_UT "Build unit tests" ${PORK_BUILD_UT_DEFAULT})
+option(PORK_FMT_BUNDLED "Use bundled fmt library" TRUE)
+option(PORK_SPDLOG_BUNDLED "Use bundled spdlog library" TRUE)
 
 add_library(common INTERFACE)
 add_library(PORK::common ALIAS common)
