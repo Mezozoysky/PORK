@@ -19,13 +19,13 @@ public:
 private:
     Token formErrorToken(std::string_view message, Input & input) const;
 
-    void skipWhitespace(Input & input) const;
-
     Token scanKeywordOrIdentifier(Input & input) const;
     Token scanNumber(Input & input) const;
     Token scanIntNumber(Input & input, std::string && starting = "") const;
     Token scanRealNumber(Input & input, std::string && starting = "") const;
+    Token scanSymbol(Input & input) const;
 
 private:
-     static const TokenTypeMap sKeywordMap;
+    static const TokenTypeMap sKeywordMap;
+//    static const TokenTypeMap sSymbolMap;
 };

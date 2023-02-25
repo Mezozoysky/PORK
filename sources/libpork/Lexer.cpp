@@ -77,33 +77,60 @@ auto const & str2int64 = static_cast<long long(*)(std::string const &, std::size
 auto const & str2real32 = static_cast<float(*)(std::string const &, std::size_t *)>(std::stof);
 auto const & str2real64 = static_cast<double(*)(std::string const &, std::size_t *)>(std::stod);
 
-//const Lexer::TokenTypeMap Lexer::sSymbolMap
-//{
-//    { '{', Token::Type::LBRACE },
-//    { '}', Token::Type::RBRACE },
-//    { '(', Token::Type::LPAREN },
-//    { ')', Token::Type::RPAREN },
-//    { '+', Token::Type::PLUS },
-//    { '-', Token::Type::MINUS },
-//    { '<', Token::Type::LESS },
-//    { '>', Token::Type::GREATER },
-//    { '=', Token::Type::ASSIGN },
-//    { ';', Token::Type::SEMICOLON },
-//    { ':', Token::Type::COLON },
-//    { ',', Token::Type::COMMA }
-//};
 
 const Lexer::TokenTypeMap Lexer::sKeywordMap
 {
-    { "if", Token::Type::IF },
-    { "else", Token::Type::ELSE },
-    { "while", Token::Type::WHILE },
-    { "do", Token::Type::DO },
+    {"if", Token::Type::IF},
+    {"else", Token::Type::ELSE},
+    {"while", Token::Type::WHILE},
+    {"do", Token::Type::DO},
 };
+
+//const Lexer::TokenTypeMap Lexer::sSymbolMap
+//{
+//    {"{", Token::Type::L_BRACE},
+//    {"}", Token::Type::R_BRACE},
+//    {"(", Token::Type::L_PAREN},
+//    {")", Token::Type::R_PAREN},
+//    {"[", Token::Type::L_BRACKET},
+//    {"]", Token::Type::R_BRACKET},
+//    {"<", Token::Type::LESS},
+//    {"<<", Token::Type::DOUBLE_LESS},
+//    {">", Token::Type::GREATER},
+//    {">>", Token::Type::DOUBLE_GR},
+//    {"+", Token::Type::PLUS},
+//    {"-", Token::Type::MINUS},
+//    {"*", Token::Type::ASTERISK},
+//    {"/", Token::Type::SLASH},
+//    {"%", Token::Type::PERCENT},
+//    {"=", Token::Type::EQUALS},
+//    {"==", Token::Type::DOUBLE_EQ},
+//    {";", Token::Type::SEMICOLON},
+//    {":", Token::Type::COLON},
+//    {",", Token::Type::COMMA},
+//    {".", Token::Type::DOT},
+//    {"..", Token::Type::DOUBLE_DOT},
+//    {"?", Token::Type::QUESTION},
+//    {"!", Token::Type::EXCLAMATION},
+//    {"&", Token::Type::AMPERSAND},
+//    {"&&", Token::Type::DOUBLE_AMP},
+//    {"|", Token::Type::PIPE},
+//    {"||", Token::Type::DOUBLE_PIPE},
+//    {"^", Token::Type::CARET},
+//    {"~", Token::Type::TILDA},
+//    {"$", Token::Type::DOLLAR},
+//    {"@", Token::Type::AT}
+//};
 
 Token Lexer::nextToken(Input & input) const
 {
     char ch = input.currChar();
+    assert(std::isgraph(ch) || std::isspace(ch) || ch == Input::END);
+    if (!std::isgraph(ch) && !std::isspace(ch) && ch != Input::END)
+    {
+        return { Token::Type::ERROR, fmt::format("unexpected character (code: {}", int(ch)) };
+    }
+
     while (ch != Input::END)
     {
         if (std::isspace(ch))
@@ -111,7 +138,7 @@ Token Lexer::nextToken(Input & input) const
             // skip whitespace
             ch = input.nextChar();
         }
-        else if (std::isalpha(ch) || ch == '_')
+        else if (ch == '_' || std::isalpha(ch))
         {
             return scanKeywordOrIdentifier(input);
         }
@@ -119,25 +146,10 @@ Token Lexer::nextToken(Input & input) const
         {
             return scanNumber(input);
         }
-        else if (ch == '.')
+        else if (std::ispunct(ch))
         {
-            ch = input.nextChar();
-            if (ch == '.')
-            {
-                input.nextChar();
-                return {Token::Type::DOUBLE_DOT};
-            }
-            else if (std::isdigit(ch))
-            {
-                return scanRealNumber(input, ".");
-            }
-
-            return {Token::Type::DOT};
-        }
-        else if (ch == '/')
-        {
-            ch = input.nextChar();
-            if (ch == '/')
+            std::string term;
+            if (ch == '#')
             {
                 // skip rest of line as comment
                 do
@@ -149,14 +161,10 @@ Token Lexer::nextToken(Input & input) const
                 {
                     input.nextChar();
                 }
-            }
-//            else if (ch == '=')
-//            {
-//                input.nextChar();
-//                return {Token::Type::DIVIDE_ASSIGN};
-//            }
 
-            return {Token::Type::DIVIDE};
+                continue;
+            }
+            return scanSymbol(input);
         }
     }
 
@@ -168,19 +176,10 @@ Token Lexer::formErrorToken(std::string_view message, Input & input) const
     return {Token::Type::ERROR, fmt::format("Lexical error near {}, {}: {}\n", input.currLine(),  input.currCol(), message.data())};
 }
 
-void Lexer::skipWhitespace(Input &input) const
-{
-    char ch = input.currChar();
-    while (std::isspace(ch))
-    {
-        ch = input.nextChar();
-    }
-}
-
 Token Lexer::scanKeywordOrIdentifier(Input & input) const
 {
     char ch = input.currChar();
-    assert(std::isalpha(ch) || ch == '_');
+    assert(ch == '_' || std::isalpha(ch));
 
     std::string term;
     while (ch == '_' || std::isalpha(ch) || std::isdigit(ch))
@@ -296,4 +295,180 @@ Token Lexer::scanIntNumber(Input & input, std::string && starting) const
 Token Lexer::scanRealNumber(Input & input, std::string && starting) const
 {
     return formErrorToken("Real numbers are not implemented yet", input);
+}
+
+Token Lexer::scanSymbol(Input & input) const
+{
+    char ch = input.currChar();
+    assert(std::ispunct(ch));
+
+    std::string term{ch};
+    if (ch == '{')
+    {
+        input.nextChar();
+        return {Token::Type::L_BRACE};
+    }
+    else if (ch == '}')
+    {
+        input.nextChar();
+        return {Token::Type::R_BRACE};
+    }
+    else if (ch == '(')
+    {
+        input.nextChar();
+        return {Token::Type::L_PAREN};
+    }
+    else if (ch == ')')
+    {
+        input.nextChar();
+        return {Token::Type::R_PAREN};
+    }
+    else if (ch == '[')
+    {
+        input.nextChar();
+        return {Token::Type::L_BRACKET};
+    }
+    else if (ch == ']')
+    {
+        input.nextChar();
+        return {Token::Type::R_BRACKET};
+    }
+    else if (ch == '<')
+    {
+        ch = input.nextChar();
+        if (ch == '<')
+        {
+            input.nextChar();
+            return {Token::Type::DOUBLE_LESS};
+        }
+
+        return {Token::Type::LESS};
+    }
+    else if (ch == '>')
+    {
+        ch = input.nextChar();
+        if (ch == '>')
+        {
+            input.nextChar();
+            return {Token::Type::DOUBLE_GR};
+        }
+
+        return {Token::Type::GREATER};
+    }
+    else if (ch == '+')
+    {
+        input.nextChar();
+        return {Token::Type::PLUS};
+    }
+    else if (ch == '-')
+    {
+        input.nextChar();
+        return {Token::Type::MINUS};
+    }
+    else if (ch == '*')
+    {
+        input.nextChar();
+        return {Token::Type::ASTERISK};
+    }
+    else if (ch == '/')
+    {
+        input.nextChar();
+        return {Token::Type::SLASH};
+    }
+    else if (ch == '%')
+    {
+        input.nextChar();
+        return {Token::Type::PERCENT};
+    }
+    else if (ch == '=')
+    {
+        ch = input.nextChar();
+        if (ch == '=')
+        {
+            input.nextChar();
+            return {Token::Type::DOUBLE_EQ};
+        }
+
+        return {Token::Type::EQUALS};
+    }
+    else if (ch == ';')
+    {
+        input.nextChar();
+        return {Token::Type::SEMICOLON};
+    }
+    else if (ch == ':')
+    {
+        input.nextChar();
+        return {Token::Type::COLON};
+    }
+    else if (ch == ',')
+    {
+        input.nextChar();
+        return {Token::Type::COMMA};
+    }
+    else if (ch == '.')
+    {
+        ch = input.nextChar();
+//        if (ch == '.')
+//        {
+//            input.nextChar();
+//            return {Token::Type::DOUBLE_DOT};
+//        }
+
+        return {Token::Type::DOT};
+    }
+//    else if (ch == '?')
+//    {
+//        input.nextChar();
+//        return {Token::Type::QUESTION};
+//    }
+    else if (ch == '!')
+    {
+        input.nextChar();
+        return {Token::Type::EXCLAMATION};
+    }
+    else if (ch == '&')
+    {
+        ch = input.nextChar();
+        if (ch == '&')
+        {
+            input.nextChar();
+            return {Token::Type::DOUBLE_AMP};
+        }
+
+        return {Token::Type::EXCLAMATION};
+    }
+    else if (ch == '|')
+    {
+        ch = input.nextChar();
+        if (ch == '|')
+        {
+            input.nextChar();
+            return {Token::Type::DOUBLE_PIPE};
+        }
+
+        return {Token::Type::PIPE};
+    }
+    else if (ch == '^')
+    {
+        input.nextChar();
+        return {Token::Type::CARET};
+    }
+    else if (ch == '~')
+    {
+        input.nextChar();
+        return {Token::Type::TILDA};
+    }
+//    else if (ch == '$')
+//    {
+//        input.nextChar();
+//        return {Token::Type::DOLLAR};
+//    }
+//    else if (ch == '@')
+//    {
+//        input.nextChar();
+//        return {Token::Type::AT};
+//    }
+
+    return formErrorToken(fmt::format("unexpected character '{}' (code: {}) while scanning symbol", ch, int{ch}), input);
 }
