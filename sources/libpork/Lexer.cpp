@@ -80,6 +80,11 @@ auto const & str2real64 = static_cast<double(*)(std::string const &, std::size_t
 
 const Lexer::TokenTypeMap Lexer::sKeywordMap
 {
+    {"module", Token::Type::MODULE},
+    {"use", Token::Type::USE},
+    {"func", Token::Type::FUNC},
+    {"var", Token::Type::VAR},
+    {"as", Token::Type::AS},
     {"if", Token::Type::IF},
     {"else", Token::Type::ELSE},
     {"while", Token::Type::WHILE},
@@ -436,7 +441,7 @@ Token Lexer::scanSymbol(Input & input) const
             return {Token::Type::DOUBLE_AMP};
         }
 
-        return {Token::Type::EXCLAMATION};
+        return {Token::Type::AMPERSAND};
     }
     else if (ch == '|')
     {
