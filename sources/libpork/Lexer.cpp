@@ -164,7 +164,7 @@ Token Lexer::nextToken(Input & input) const
                 while (ch != '\n' && ch != Input::END);
                 if (ch == '\n')
                 {
-                    input.nextChar();
+                    ch = input.nextChar();
                 }
 
                 continue;
@@ -196,7 +196,7 @@ Token Lexer::scanKeywordOrIdentifier(Input & input) const
     auto kwIt = sKeywordMap.find(term);
     if (kwIt != sKeywordMap.end())
     {
-        return {kwIt->second, std::move(term)};
+        return {kwIt->second};
     }
     return {Token::Type::IDENTIFIER, std::move(term)};
 }
