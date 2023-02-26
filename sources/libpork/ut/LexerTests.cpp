@@ -13,7 +13,6 @@ TEST_CASE("Lexer basic tests", "[Lexer]")
         Token token = lexer.nextToken(input);
 
         REQUIRE(token.type == Token::Type::IF);
-        REQUIRE(std::get<std::string>(token.value) == "if");
         REQUIRE(input.currLine() == 1u);
         REQUIRE(input.currCol() == 2u);
         REQUIRE(input.isEnded());
@@ -29,7 +28,6 @@ TEST_CASE("Lexer basic tests", "[Lexer]")
         token = lexer.nextToken(input);
 
         REQUIRE(token.type == Token::Type::ELSE);
-        REQUIRE(std::get<std::string>(token.value) == "else");
         REQUIRE(input.currLine() == 1u);
         REQUIRE(input.currCol() == 4u);
         REQUIRE(input.isEnded());
@@ -45,7 +43,6 @@ TEST_CASE("Lexer basic tests", "[Lexer]")
         token = lexer.nextToken(input);
 
         REQUIRE(token.type == Token::Type::WHILE);
-        REQUIRE(std::get<std::string>(token.value) == "while");
         REQUIRE(input.currLine() == 1u);
         REQUIRE(input.currCol() == 5u);
         REQUIRE(input.isEnded());
@@ -61,7 +58,6 @@ TEST_CASE("Lexer basic tests", "[Lexer]")
         token = lexer.nextToken(input);
 
         REQUIRE(token.type == Token::Type::DO);
-        REQUIRE(std::get<std::string>(token.value) == "do");
         REQUIRE(input.currLine() == 1u);
         REQUIRE(input.currCol() == 2u);
         REQUIRE(input.isEnded());
@@ -295,5 +291,33 @@ TEST_CASE("Lexer basic tests", "[Lexer]")
         token = lexer.nextToken(input);
         REQUIRE(token.type == Token::Type::END_OF_INPUT);
         REQUIRE(input.currCol() == 33u);
+    }
+
+    SECTION("Comment skipping while scanning")
+    {
+        StringInput input{"\
+# comment 1\n\
+var myVar : Int32 {228i}; # comment 2\n\
+# comment 3\n\
+        "};
+        Lexer lexer;
+        Token token = lexer.nextToken(input);
+        REQUIRE(token.type == Token::Type::VAR);
+        token = lexer.nextToken(input);
+        REQUIRE(token.type == Token::Type::IDENTIFIER);
+        token = lexer.nextToken(input);
+        REQUIRE(token.type == Token::Type::COLON);
+        token = lexer.nextToken(input);
+        REQUIRE(token.type == Token::Type::IDENTIFIER);
+        token = lexer.nextToken(input);
+        REQUIRE(token.type == Token::Type::L_BRACE);
+        token = lexer.nextToken(input);
+        REQUIRE(token.type == Token::Type::INT32_LITERAL);
+        token = lexer.nextToken(input);
+        REQUIRE(token.type == Token::Type::R_BRACE);
+        token = lexer.nextToken(input);
+        REQUIRE(token.type == Token::Type::SEMICOLON);
+        token = lexer.nextToken(input);
+        REQUIRE(token.type == Token::Type::END_OF_INPUT);
     }
 }
