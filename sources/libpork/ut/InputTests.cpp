@@ -5,28 +5,24 @@
 TEST_CASE("StringInput basic tests", "[Input,StringInput]")
 {
     std::string source = "\
-module MyMath\n\
-{\n\
-public:\n\
-    const PI : Real32 {3.1415926};\n\
+module My;\n\
 \n\
-    Func squareReal(x : Real32) : Real32\n\
-    {\n\
-        return (x * x);\n\
-    }\n\
+const PI : Real32 {3.1415926};\n\
+\n\
+func squareReal(x : Real32) -> Real32\n\
+{\n\
+    return (x * x);\n\
 }\n\
 \n\
-func main() : Int32\n\
+func main() -> Int32\n\
 {\n\
-    use MyMath;\n\
-    use Io::print;\n\
+use Io.print;\n\
 \n\
-    const radius : Int32 {10};\n\
-    var area : Real32 {PI * squareReal(radius as Real32)};\n\
-    print(\"Area of circle with radius == {}: {}\", radius as String, area as String);\n\
+const radius : Int32 = 10;\n\
+var area : Real32 {PI * squareReal(radius as Real32)};\n\
+print(\"Area of circle with radius == {}: {}\", radius as String, area as String);\n\
 \n\
-    return 0;\n\
-}\n\
+return 0;\n\
 ";
 
     StringInput input{std::move(source)};
